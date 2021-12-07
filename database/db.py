@@ -24,8 +24,10 @@ def create_table(sql_create_table):
     """
     try:
         conn = create_connection()
-        cur = conn.cursor()
-        cur.execute(sql_create_table)
+        with conn:
+            cur = conn.cursor()
+            cur.execute(sql_create_table)
+            conn.commit()
     except Error as e:
         print(e)
 
@@ -37,15 +39,16 @@ def create_tables():
     sql_create_web_addon_table = """ CREATE TABLE IF NOT EXISTS web_addon (
                                         ID INTEGER PRIMARY KEY AUTOINCREMENT,
                                         esoui_id text NOT NULL,
-                                        name text NOT NULL,
+                                        name text NOT NULL
                                     ); """
+
     sql_create_local_addon_table = """ CREATE TABLE IF NOT EXISTS local_addon (
                                         ID INTEGER PRIMARY KEY AUTOINCREMENT,
                                         esoui_id text DEFAULT '',
                                         folder_name text NOT NULL,
                                         web_name text DEFAULT '',
                                         loacl_version text DEFAULT '0',
-                                        web_version text DEFAULT '0',
+                                        web_version text DEFAULT '0'
                                     ); """
     # create a database connection
     conn = create_connection()
@@ -65,7 +68,7 @@ def insert_web_addon(addon):
     conn = create_connection()
     with conn:
         cur = conn.cursor()
-        sql = f""" INSERT INTO local_addon (esoui_id,name)
+        sql = f""" INSERT INTO web_addon (esoui_id,name)
                 VALUES(?,?) """
         cur.execute(sql, addon)
         conn.commit()
