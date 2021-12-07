@@ -47,7 +47,7 @@ def create_tables():
                                         esoui_id text DEFAULT '',
                                         folder_name text NOT NULL,
                                         web_name text DEFAULT '',
-                                        loacl_version text DEFAULT '0',
+                                        local_version text DEFAULT '0',
                                         web_version text DEFAULT '0'
                                     ); """
     # create a database connection
@@ -59,11 +59,32 @@ def create_tables():
         print("Unable to connect to the database")
 
 
+def rebuild_local_table():
+    conn = create_connection()
+    with conn:
+        cur = conn.cursor()
+        sql = """DROP TABLE local_addon;"""
+        cur.execute(sql)
+        conn.commit()
+
+    sql_create_local_addon_table = """ CREATE TABLE IF NOT EXISTS local_addon (
+                                ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                                esoui_id text DEFAULT '',
+                                folder_name text NOT NULL,
+                                web_name text DEFAULT '',
+                                local_version text DEFAULT '0',
+                                web_version text DEFAULT '0'
+                            ); """
+    create_table(sql_create_local_addon_table)
+
+
+
+
 def insert_web_addon(addon):
     """Create a new addon for table
     :param conn: The SQLite connection object
     :param addon: A tuple of a addon (esoui_id, name)
-    :return: addon id
+    :return: returns the row id of the cursor object, the addon id
     """
     conn = create_connection()
     with conn:
@@ -76,15 +97,14 @@ def insert_web_addon(addon):
 
 def insert_local_addon(addon):
     """Create a new addon for table
-    :param conn: The SQLite connection object
-    :param addon: local_folder name for the addon
-    :return: addon id
+    :param addon: local_folder name for the addon and the local version as a tuple
+    :return: returns the row id of the cursor object, the addon id
     """
     conn = create_connection()
     with conn:
         cur = conn.cursor()
-        sql = f""" INSERT INTO web_addon (folder_name)
-                VALUES(?) """
+        sql = f""" INSERT INTO local_addon (folder_name, local_version)
+                VALUES(?,?) """
         cur.execute(sql, (addon))
         conn.commit()
         return cur.lastrowid  # returns the row id of the cursor object, the addon id

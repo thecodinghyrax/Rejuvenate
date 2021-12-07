@@ -14,5 +14,5 @@ if Controller.is_initial():
         root.create_db_update_screen()
 
 else:
-    root.create_welcome_screen('Time to Rejuvenate your ESO Addons!')
+    root.create_find_local_screen()
 root.mainloop()

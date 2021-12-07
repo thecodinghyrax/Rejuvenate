@@ -1,6 +1,9 @@
 import tkinter as tk
+from tkinter import ttk
+from tkinter import font
 from tkinter.font import Font
-from tkinter.filedialog import askdirectory
+from tkinter.filedialog import askdirectory, test
+from types import NoneType
 from PIL import Image, ImageTk
 from controller import Controller
 import time
@@ -22,7 +25,11 @@ class RejuvGUI(tk.Tk):
         self.animation_cmd = None
         self.returned_path = ""
         self.scraper = Controller.get_scraper()
-   
+        self.style = ttk.Style()
+        self.style.configure("my_addon.Treeview", font=self.font10, 
+                            background="#333333", fg="#000000" )
+        self.style.configure("my_addon.Treeview.Heading", font=self.font10)
+
 
 
     def create_display_frame(self, x, y):
@@ -118,9 +125,8 @@ class RejuvGUI(tk.Tk):
         if Controller.create_initial_db():
             Controller.update_config('initial_load', 'False')
             self.scraper.scrape_all_to_db()
-            # Controller.add_search_names()
             self.display_frame.destroy()
-            self.create_welcome_screen('Rejuvenate is ready!')
+            self.create_find_local_screen()
         else:
             self.display_frame.destroy()
             self.create_error_screen()
@@ -128,6 +134,30 @@ class RejuvGUI(tk.Tk):
             time.sleep(5)
             quit()
 
+
+    def create_find_local_screen(self):
+        '''Creates a screen to tell the user that the local addons are being found
+            Rebuilds the local addon table to start freash incase of new addon install
+            Calls the "create_db" method to start the db creation process
+        '''
+        Controller.rebuild_local_addons_table()
+        self.create_display_frame(0, 0)
+        self.setup_label = tk.Label(self.display_frame, text=Controller.get_constants().LOCAL_FIND_MSG,
+                                height=10, width=26, pady=2, font=self.font20,
+                                fg='#FFFFFF', bg='#333333')
+        self.setup_label.place(x=80, y=100)
+        self.update()
+        self.find_local_addons()
+
+
+    def find_local_addons(self):
+        '''Calls the "find_local_addons" method to add all installed addon names
+            and local version numbers to the db.
+            When done, creates the welcome screen.
+        '''
+        Controller.find_local_addons()
+        self.setup_label.destroy()
+        self.create_welcome_screen('Rejuvenate is ready!')
 
     def create_error_screen(self):
         self.create_display_frame(0, 0)
@@ -148,71 +178,39 @@ class RejuvGUI(tk.Tk):
         self.bkg_label = tk.Label(self.display_frame, image=self.bkg_image)
         self.bkg_label.place(x=-2, y=0)
 
-        self.local_addons_display = tk.Listbox(self.display_frame, height=28, width=45, 
-                                                bg='#333333', font=self.font10, fg="#FFFFFF")
-        self.local_addons_display.place(x=30, y=30)
-        self.get_local_addons_btn = tk.Button(self.display_frame, text='Find installed addons', 
-                                                command=self.show_installed)
-        self.get_local_addons_btn.place(x=120, y=520)
+        self.my_addons = ttk.Treeview(self.display_frame, height=23, style="my_addon.Treeview")
+        self.my_addons.place(x=0, y=50)
 
-        self.get_updates_btn = tk.Button(self.display_frame, text='Check for updates')
+        self.style.configure(self.my_addons)
 
+        self.my_addons['columns'] = ('esoui_id', 'folder_name', 'local_version', 'web_version')
+        self.my_addons.column("#0", width=0, stretch=tk.NO)
+        self.my_addons.column('esoui_id', anchor=tk.CENTER, width=80)
+        self.my_addons.column('folder_name', anchor=tk.W, width=240)
+        self.my_addons.column('local_version', anchor=tk.CENTER, width=110)
+        self.my_addons.column('web_version', anchor=tk.CENTER, width=110)
 
-    def show_installed(self):
-        self.local_addons_display.delete(0, tk.END)
-        addons = Controller.get_local_addon_dirs()
-        unmatched_addons = Controller.get_unmatched_addons(addons)
-        while len(unmatched_addons) > 0:
-            self.create_not_found_popup(unmatched_addons[0])
-            self.local_addons_display.delete(0, tk.END)
-            self.local_addons_display.insert(0, 'Please press "Find installed addons" again')
-            unmatched_addons.pop[0]
-        matched_addons = Controller.get_matching_addons(Controller.get_local_addon_dirs())
-        Controller.set_all_to_uninstalled()
-        for count, addon in enumerate(matched_addons):
-            print(addon)
-            try:
-                addon_info = f"{addon[1]} - Version: {Controller.get_addon_version(addon[2])}"
-            except Exception as e:
-                addon_info = f"{addon[1]} threw error {e}"
-            Controller.update_addon_info('esoui_id', addon[0], 'installed', 1)
-            self.local_addons_display.insert(count, addon_info)
-        self.local_addons_display.place(x=30, y=30)
-        self.get_local_addons_btn.destroy()
-        self.get_updates_btn.place(x=120, y=520)
+        self.my_addons.heading('#0', text="", anchor=tk.CENTER)
+        self.my_addons.heading('esoui_id', text="ESOUI ID", anchor=tk.CENTER)
+        self.my_addons.heading('folder_name', text="Addon Name", anchor=tk.W)
+        self.my_addons.heading('local_version', text="Installed Version", anchor=tk.CENTER)
+        self.my_addons.heading('web_version', text="Current Version", anchor=tk.CENTER)
 
-    
-    def create_not_found_popup(self, not_found_addon):
-        popup = tk.Toplevel(self, bg='#333333')
-        popup.geometry("300x300")
-        popup.title(f"Addon Not found - {not_found_addon}")
-        match_result = Controller.try_match(not_found_addon, Controller.get_all_addons())
-        msg = f"{not_found_addon} was not found!\n\n" + \
-                f"Is this the addon you are using?\n\n{match_result[1]}"
-        tk.Label(popup, text=msg, bg='#333333', font=self.font10, fg="#FFFFFF").place(x=30, y=50)
-        tk.Button(popup, text="Yes", font=self.font10,
-                    command=lambda: update_addon_name(match_result[2], not_found_addon)
-                    ).place(x=125, y=200)
-        def update_addon_name(old_name, new_name):
-            Controller.update_addon_info('search_name', old_name, 'user_updated', 1)
-            Controller.update_addon_info('search_name', old_name, 'search_name', new_name)
-            popup.destroy()
-        #TODO make logic for manually updating addon name
+        self.my_addons.tag_configure('odd', background="#303030", foreground="#FFFFFF")
+        self.my_addons.tag_configure('even', foreground="#FFFFFF")
 
+        for position, addon in enumerate(Controller.get_local_db_addons()):
+            if position % 2 == 0:
+                self.my_addons.insert(parent='', index='end', iid=position, text='',
+                        values=(addon[0], addon[1], addon[3], addon[4]), tags=('odd',))
+            else:
+                self.my_addons.insert(parent='', index='end', iid=position, text='',
+                        values=(addon[0], addon[1], addon[3], addon[4]), tags=('even',))
+        self.my_addons.place(x=25, y=25)
 
+        self.find_current_btn = tk.Button(self.display_frame, text="Find Versions")
+        self.find_current_btn.place(x=80, y=525)
 
+        self.update_btn = tk.Button(self.display_frame, text="Update All")
+        self.update_btn.place(x=400, y=525)
 
-    # Trying to get a loading gif to work here
-    # def create_loading_canvas(self, parent):
-    #     self.loading_gif = tk.Canvas(parent, width=200, height=200, background='#333333')
-    #     self.loading_gif.place(x=150, y=400)
-    #     self.sequence = []
-    #     for count in range(0, 36):
-    #         self.sequence.append(ImageTk.PhotoImage(Image.open(f'assets/eso{count}.gif')))
-    #     self.image = self.loading_gif.create_image(100,100, image=self.sequence[0])
-    #     self.animate(1)
-
-
-    # def animate(self, counter):
-    #     self.loading_gif.itemconfig(self.image, image=self.sequence[counter])
-    #     self.db_update_frame.after(50, lambda: self.animate((counter+1) % len(self.sequence)))

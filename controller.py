@@ -95,6 +95,15 @@ class Controller:
                     line = line.split(":")
                     return line[1].strip()
 
+    @staticmethod
+    def find_local_addons():
+        for name in Controller.get_local_addon_dirs():
+            try:
+                version = Controller.get_addon_version(name)
+            except Exception as e:
+                version = f"{name} threw Exception: {e}"
+            db.insert_local_addon((name, version))
+
     ##############################   DB METHODS   ######################################
     @staticmethod
     def create_initial_db():
@@ -107,17 +116,13 @@ class Controller:
         except Exception as e:
             return False 
 
-
-    # @staticmethod
-    # def add_search_names():
-    #     all_addons = db.get_all_addons()
-    #     for addon in all_addons:
-    #         db.update_addon_by_id(addon[0], 'search_name', Controller.create_search_name(addon[1]))
-
-
-    # @staticmethod
-    # def get_all_current_addon_versions(local_addon_list, scraper):
-    #     pass
+    @staticmethod
+    def rebuild_local_addons_table():
+        db.rebuild_local_table()
+    
+    @staticmethod
+    def get_local_db_addons():
+        return db.get_all_local_addons()
 
     
     # @staticmethod
