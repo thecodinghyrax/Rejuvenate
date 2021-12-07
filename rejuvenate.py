@@ -1,8 +1,5 @@
 from gui.rejuv_gui import RejuvGUI
-# from database import db
 from controller import Controller
-# from web_modules.scraper import Scraper
-
 
 
 root = RejuvGUI()
