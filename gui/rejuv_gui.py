@@ -208,9 +208,16 @@ class RejuvGUI(tk.Tk):
                         values=(addon[0], addon[1], addon[3], addon[4]), tags=('even',))
         self.my_addons.place(x=25, y=25)
 
-        self.find_current_btn = tk.Button(self.display_frame, text="Find Versions")
+        self.find_current_btn = tk.Button(self.display_frame, text="Find Versions", command=self.get_matching)
         self.find_current_btn.place(x=80, y=525)
 
         self.update_btn = tk.Button(self.display_frame, text="Update All")
         self.update_btn.place(x=400, y=525)
 
+
+
+
+
+
+    def get_matching(self):
+        Controller.get_matching_list()
