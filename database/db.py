@@ -119,6 +119,7 @@ def get_all_web_addons():
     cur = conn.cursor()
     cur.execute("SELECT esoui_id,name FROM web_addon")
     rows = cur.fetchall()
+    return rows
     
 
 def get_all_local_addons():

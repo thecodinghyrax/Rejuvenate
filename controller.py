@@ -182,3 +182,57 @@ class Controller:
         addon_info = db.get_one_addon('search_name', name)
         print(addon_info[0])
         return scraper.scrape_single_addon_version(addon_info[0])
+
+
+    ##########################   NAME MATCHING METHODS   ############################
+    @staticmethod
+    def list_lower(list_to_lower):
+        return [x.lower() for x in list_to_lower]
+    
+
+    @staticmethod
+    def get_matching_list():
+        local_addons = db.get_all_local_addons()
+        web_addons = db.get_all_web_addons()
+        matched_list = []
+        for addon in local_addons:
+            esoui_id, web_name = Controller.try_match(addon[1], web_addons)
+            matched_list.append((addon[1], esoui_id, web_name))
+        for match in matched_list:
+            print(match)
+  
+            
+    @staticmethod
+    def _get_match_score(addon_name, name_to_search):
+        '''Compares two names and derives a score of how close they are
+        :param addon_name: The name of the local addon
+        :param name_to_search: An addon name from the website
+        :return: A score of how closely the two names matched
+        '''
+        if addon_name in name_to_search and len(addon_name) == len(name_to_search):
+            return 100 # 100% match :)
+        name_to_search_list = list(name_to_search)
+        matched_count = 0
+        for char in list(addon_name):
+            if char in name_to_search_list:
+                name_to_search_list.pop(name_to_search_list.index(char))
+                matched_count += 1
+                
+        return matched_count - len(name_to_search_list)
+
+
+    @staticmethod
+    def try_match(name, all_addons_list):
+        '''Attempts to find a addon from the list that most closly matches name
+        :param name: The name of the local addon folder.
+        :param all_addons_list: A full list of addon names for the website
+        :return: The name of the closest match from the web_addons (highest score wins)
+        '''
+        match = (0, 0)
+        for index, addon in enumerate(all_addons_list):
+            score = Controller._get_match_score(name, addon[1])
+            if index == 0:
+                match = (score, index)
+            elif score > match[0]:
+                    match = (score, index)
+        return all_addons_list[match[1]]
