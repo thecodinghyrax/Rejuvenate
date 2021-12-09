@@ -211,12 +211,13 @@ class RejuvGUI(tk.Tk):
             select the row that is incorrect and press the "Update Selected" btn to fix.'''
         self.display_frame.destroy()
         Controller.rebuild_local_addons_table()
-        self.find_local_addons()
+        Controller.find_local_addons()
         msg = "Please update any addon that does not match"
         column_list = ['ESOUI ID', 'Web Version', 'Local Version']
         data = Controller.get_matching_list()
         self.create_table_view(msg, column_list, data)
         self.create_selected_btn()
+        self.create_view_local_addons_btn()
 
 
     def create_select_correct_screen(self, local):
@@ -252,12 +253,10 @@ class RejuvGUI(tk.Tk):
     def create_installed_addons_screen(self):
         '''Creates a screen that displays all the locally installed addons in a table'''
         self.display_frame.destroy()
-        msg = 'Rejuvenate is ready!'
+        msg = 'Let\'s check for some updates!'
         column_list = ['ESOUI ID', 'Local Addon', 'Local Version', 'Web Version']
         data = Controller.get_local_db_addons()
         self.create_table_view(msg, column_list, data)
-        self.create_compare_btn()
-
 
 
     ################################# MAIN GUI BUTTONS  #################################
@@ -280,6 +279,12 @@ class RejuvGUI(tk.Tk):
         self.update_match_btn = tk.Button(self.display_frame, text='Update Match', command=lambda: self.update_match(data, local))
         self.update_match_btn.place(x=250, y=520)
 
+    
+    def create_view_local_addons_btn(self):
+        '''Creates a button that calls the create_installed_addon_screen method'''
+        self.view_local_addons_btn = tk.Button(self.display_frame, text='Addons Match', command=self.create_installed_addons_screen)
+        self.view_local_addons_btn.place(x=450, y=520)
+
 
     ########################################## MAIN GUI METHODS  #########################
     def update_selected(self):
@@ -294,7 +299,6 @@ class RejuvGUI(tk.Tk):
             and local version numbers to the db.
             When done, creates the welcome screen.
         '''
-        Controller.find_local_addons()
         self.setup_label.destroy()
         self.create_installed_addons_screen()
 
