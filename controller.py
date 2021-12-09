@@ -124,7 +124,11 @@ class Controller:
     def get_local_db_addons():
         return db.get_all_local_addons()
 
-    
+    @staticmethod
+    def get_web_db_addons():
+        return db.get_all_web_addons()
+
+
     # @staticmethod
     # def get_matching_addons(local_addons_list):
     #     found_list = []
@@ -197,9 +201,8 @@ class Controller:
         matched_list = []
         for addon in local_addons:
             esoui_id, web_name = Controller.try_match(addon[1], web_addons)
-            matched_list.append((addon[1], esoui_id, web_name))
-        for match in matched_list:
-            print(match)
+            matched_list.append((esoui_id, web_name, addon[1]))
+        return matched_list
   
             
     @staticmethod

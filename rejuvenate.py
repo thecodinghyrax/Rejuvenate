@@ -14,5 +14,5 @@ if Controller.is_initial():
         root.create_db_update_screen()
 
 else:
-    root.create_find_local_screen()
+    root.create_compare_msg_screen()
 root.mainloop()
