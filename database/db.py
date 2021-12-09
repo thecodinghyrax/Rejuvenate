@@ -155,6 +155,17 @@ def get_all_local_addons():
     return rows 
 
 
+def get_addons_to_check():
+    """Query all rows of the local_addon table
+    :return: All rows containing data from the local_addon table
+    """
+    conn = create_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT folder_name,local_version,web_version,esoui_id FROM local_addon")
+    rows = cur.fetchall()
+    return rows 
+
+
 def get_all_corrections():
     """Query all rows of correction table
     :return: All rows containing data from the correction table

@@ -233,37 +233,34 @@ class RejuvGUI(tk.Tk):
         self.create_table_view(msg, column_list, data)
         self.create_update_match_btn(data, local) # passing data down to avoid another db call
 
-
-    # MAY NOT BE NEEDED
-    # def create_find_local_screen(self):
-    #     '''Creates a screen to tell the user that the local addons are being found
-    #         Rebuilds the local addon table to start freash incase of new addon install
-    #         Calls the "find_local_addons" method to start the main UI flow
-    #     '''
-    #     Controller.rebuild_local_addons_table()
-    #     self.create_display_frame(0, 0)
-    #     self.setup_label = tk.Label(self.display_frame, text=Controller.get_constants().LOCAL_FIND_MSG,
-    #                             height=10, width=26, pady=2, font=self.font20,
-    #                             fg='#FFFFFF', bg='#333333')
-    #     self.setup_label.place(x=80, y=100)
-    #     self.update()
-    #     self.find_local_addons()
-
     
     def create_installed_addons_screen(self):
         '''Creates a screen that displays all the locally installed addons in a table'''
         self.display_frame.destroy()
         msg = 'Let\'s check for some updates!'
-        column_list = ['ESOUI ID', 'Local Addon', 'Local Version', 'Web Version']
-        data = Controller.get_local_db_addons()
+        column_list = ['Local Addon', 'Local Version', 'Web Version']
+        data = Controller.get_addons_to_check()
         self.create_table_view(msg, column_list, data)
+        self.create_check_for_updates_btn(data)
 
 
+    def create_version_check_screen(self):
+        '''Creates a screen to tell the user that current addon version are being checked
+ 
+        '''
+        self.create_display_frame(0, 0)
+        self.setup_label = tk.Label(self.display_frame, text=Controller.get_constants().CHECK_UPDATE_MSG,
+                                height=10, width=26, pady=2, font=self.font20,
+                                fg='#FFFFFF', bg='#333333')
+        self.setup_label.place(x=80, y=100)
+        self.update()
+
+        
     ################################# MAIN GUI BUTTONS  #################################
     def create_selected_btn(self):
         '''Creates a button that calls the update selected method'''
         self.selected_btn = tk.Button(self.display_frame, text='Update Selected', command=self.update_selected)
-        self.selected_btn.place(x=250, y=520)
+        self.selected_btn.place(x=150, y=520)
 
 
     def create_compare_btn(self):
@@ -282,8 +279,26 @@ class RejuvGUI(tk.Tk):
     
     def create_view_local_addons_btn(self):
         '''Creates a button that calls the create_installed_addon_screen method'''
-        self.view_local_addons_btn = tk.Button(self.display_frame, text='Addons Match', command=self.create_installed_addons_screen)
-        self.view_local_addons_btn.place(x=450, y=520)
+        self.view_local_addons_btn = tk.Button(self.display_frame, text='Addons All Match', command=self.create_installed_addons_screen)
+        self.view_local_addons_btn.place(x=350, y=520)
+
+    
+    def create_check_for_updates_btn(self, data):
+        '''Creates a button that calls the create_installed_addon_screen method'''
+        self.check_for_updates_btn = tk.Button(self.display_frame, text='Check for Updates', command=lambda: self.check_for_updates(data))
+        self.check_for_updates_btn.place(x=250, y=520)
+        
+            
+    def create_update_all_btn(self):
+        '''Creates a button that calls the create_installed_addon_screen method'''
+        self.update_all_btn = tk.Button(self.display_frame, text='Update All Addons', command=self.update_all)
+        self.update_all_btn.place(x=250, y=520)
+    
+
+    def create_exit_btn(self):
+        '''Creates a button that calls the create_installed_addon_screen method'''
+        self.update_all_btn = tk.Button(self.display_frame, text='Exit', command=quit)
+        self.update_all_btn.place(x=350, y=520)
 
 
     ########################################## MAIN GUI METHODS  #########################
@@ -297,8 +312,7 @@ class RejuvGUI(tk.Tk):
     def find_local_addons(self):
         '''Calls the "find_local_addons" method to add all installed addon names
             and local version numbers to the db.
-            When done, creates the welcome screen.
-        '''
+            When done, creates the welcome screen.'''
         self.setup_label.destroy()
         self.create_installed_addons_screen()
 
@@ -311,3 +325,24 @@ class RejuvGUI(tk.Tk):
         Controller.add_correction_to_db(local, data[int(curent_item)])
         self.create_compare_msg_screen()
   
+  
+    def check_for_updates(self, local_addons):
+        '''Calls the find_updates method and displays the results'''
+        addons = []
+        self.create_version_check_screen()
+        for addon in local_addons:
+            addons.append((addon[0], addon[3]))
+        updates = Controller.check_for_updates(addons, self.scraper)
+        self.setup_label.destroy()
+        self.create_installed_addons_screen()
+        print(updates)
+        self.check_for_updates_btn.destroy()
+        self.create_update_all_btn()
+        
+        
+    def update_all(self):
+        '''Calls the update_all method, displays the results and adds an exit button'''
+        Controller.update_all()
+        self.create_installed_addons_screen()
+        self.create_exit_btn()
+            

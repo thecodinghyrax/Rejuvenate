@@ -95,9 +95,10 @@ class Scraper:
         link = constants.ADDON_INFO_TEMPLATE.replace('<id>', esoui_id)
         addon_page = self.parse_page(link)
         version = addon_page.find(id='version').text
-        return version
+        return version.split(': ')[1]
 
-                    
+    def check_for_updates(self, addons):
+        print(addons)    
 
     def __repr__(self):
         return "Scraper"

@@ -10,3 +10,4 @@ DB_UPDATE_MSG = "We are now setting up your\n database. This will take a little 
 DB_ERROR_MSG = "There was an issue creating \nthe database. Sorry :(\nI can not proceed. \nClosing the application."
 LOCAL_FIND_MSG = "Adding your installed addons\nto the database.\nAlmost done..."
 CHECK_ADDONS_MSG = "Please review the next screen\nto make sure the addons\ninstalled locally match the\nones listed on the website"
+CHECK_UPDATE_MSG = "Checking for the latest versions\nof your installed addons\nPlease stand by..."

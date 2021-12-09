@@ -123,6 +123,10 @@ class Controller:
     @staticmethod
     def get_local_db_addons():
         return db.get_all_local_addons()
+    
+    @staticmethod
+    def get_addons_to_check():
+        return db.get_addons_to_check()
 
     @staticmethod
     def get_web_db_addons():
@@ -183,11 +187,21 @@ class Controller:
         return Scraper()
 
 
+    # @staticmethod
+    # def get_current_addon_version(name, scraper):
+    #     addon_info = db.get_one_addon('search_name', name)
+    #     print(addon_info[0])
+    #     return scraper.scrape_single_addon_version(addon_info[0])
+    
     @staticmethod
-    def get_current_addon_version(name, scraper):
-        addon_info = db.get_one_addon('search_name', name)
-        print(addon_info[0])
-        return scraper.scrape_single_addon_version(addon_info[0])
+    def check_for_updates(local_addons, scraper):
+        current_addons = []
+        for addon in local_addons:
+            # current_addons.append(scraper.scrape_single_addon_version(addon[1]))
+            current_version = scraper.scrape_single_addon_version(addon[1])
+            current_addons.append(current_version)
+            db.update_addon_by_id('local_addon', addon[1], 'web_version', current_version)
+        return current_addons
 
 
     ##########################   NAME MATCHING METHODS   ############################
@@ -205,6 +219,7 @@ class Controller:
         for addon in local_addons:
             esoui_id, web_name = Controller.try_match(addon[1], web_addons)
             matched_list.append((esoui_id, web_name, addon[1]))
+            db.update_one_addon('local_addon','folder_name', addon[1], 'esoui_id', esoui_id)
         return matched_list
   
             
