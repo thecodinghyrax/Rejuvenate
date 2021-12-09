@@ -50,16 +50,24 @@ def create_tables():
                                         local_version text DEFAULT '0',
                                         web_version text DEFAULT '0'
                                     ); """
+
+    sql_create_correction_table = """ CREATE TABLE IF NOT EXISTS correction (
+                                        ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                                        folder_name text NOT NULL,
+                                        web_name text NOT NULL
+                                    ); """
     # create a database connection
     conn = create_connection()
     if conn is not None:
         create_table(sql_create_web_addon_table)
         create_table(sql_create_local_addon_table)
+        create_table(sql_create_correction_table)
     else:
         print("Unable to connect to the database")
 
 
 def rebuild_local_table():
+    '''Drops and rebuilds the local_addons table on every launch to keep cuurent on installs'''
     conn = create_connection()
     with conn:
         cur = conn.cursor()
@@ -78,10 +86,8 @@ def rebuild_local_table():
     create_table(sql_create_local_addon_table)
 
 
-
-
 def insert_web_addon(addon):
-    """Create a new addon for table
+    """Create a new web addon for table
     :param conn: The SQLite connection object
     :param addon: A tuple of a addon (esoui_id, name)
     :return: returns the row id of the cursor object, the addon id
@@ -95,8 +101,9 @@ def insert_web_addon(addon):
         conn.commit()
         return cur.lastrowid  # returns the row id of the cursor object, the addon id
 
+
 def insert_local_addon(addon):
-    """Create a new addon for table
+    """Create a new local addon for table
     :param addon: local_folder name for the addon and the local version as a tuple
     :return: returns the row id of the cursor object, the addon id
     """
@@ -109,6 +116,21 @@ def insert_local_addon(addon):
         conn.commit()
         return cur.lastrowid  # returns the row id of the cursor object, the addon id
 
+
+def insert_correction(local_name, web_name):
+    """Create a new correction entry
+    :param local_name: The tuple of id and local_name of an addon that did not match correctly
+    :param web_name: The correct ESOUI.com name for the local addon
+    :return: returns the row id of the cursor object, the addon id
+    """
+    conn = create_connection()
+    with conn:
+        cur = conn.cursor()
+        sql = f"""INSERT INTO correction (folder_name, web_name)
+                VALUES(?,?)"""
+        cur.execute(sql, (local_name, web_name[1]))
+        conn.commit()
+        return cur.lastrowid  # returns the row id of the cursor object, the addon id
 
 
 def get_all_web_addons():
@@ -131,6 +153,27 @@ def get_all_local_addons():
     cur.execute("SELECT esoui_id,folder_name,web_name,local_version,web_version FROM local_addon")
     rows = cur.fetchall()
     return rows 
+
+
+def get_all_corrections():
+    """Query all rows of correction table
+    :return: All rows containing data from the correction table
+    """
+    conn = create_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT folder_name,web_name FROM correction")
+    rows = cur.fetchall()
+    return rows 
+
+
+def preform_correction():
+    corrections = get_all_corrections()
+    if corrections:
+        local = get_all_local_addons()
+        for correct in corrections:
+            test = f"'local_addon','folder_name', {correct[0]}, 'folder_name', {correct[1]}"
+            update_one_addon('local_addon','folder_name', correct[0], 'folder_name', correct[1] )
+
 
 def get_one_addon(table, field, value):
     """Query a single row of the requested table
@@ -164,10 +207,10 @@ def update_one_addon(table, search_field, search_name, update_field, new_data):
     conn = create_connection()
     cur = conn.cursor()
     if type(new_data) == int:
-        sql = f"""UPDATE {table} SET {update_field}={new_data}, user_updated=1
+        sql = f"""UPDATE {table} SET {update_field}={new_data}
                 WHERE {search_field}='{search_name}'"""
     else:
-        sql = f"""UPDATE {table} SET {update_field}='{new_data}', user_updated=1
+        sql = f"""UPDATE {table} SET {update_field}='{new_data}'
                  WHERE {search_field}='{search_name}'"""
     try:
         cur.execute(sql)
@@ -176,6 +219,7 @@ def update_one_addon(table, search_field, search_name, update_field, new_data):
         return True
     except Exception as e:
         return False
+
 
 def update_addon_by_id(table, esoui_id, field, new_value):
     '''Update one row of the db using the usoui_id

@@ -210,6 +210,8 @@ class RejuvGUI(tk.Tk):
             were matched to them. There may be error and should be reviewed. The user can 
             select the row that is incorrect and press the "Update Selected" btn to fix.'''
         self.display_frame.destroy()
+        Controller.rebuild_local_addons_table()
+        self.find_local_addons()
         msg = "Please update any addon that does not match"
         column_list = ['ESOUI ID', 'Web Version', 'Local Version']
         data = Controller.get_matching_list()
@@ -228,7 +230,7 @@ class RejuvGUI(tk.Tk):
         data = Controller.get_web_db_addons()
         data.sort(key=lambda y: y[1])
         self.create_table_view(msg, column_list, data)
-        self.create_update_match_btn(data) # passing data down to avoid another db call
+        self.create_update_match_btn(data, local) # passing data down to avoid another db call
 
 
     # MAY NOT BE NEEDED
@@ -271,10 +273,11 @@ class RejuvGUI(tk.Tk):
         self.compare_btn.place(x=250, y=520)
 
 
-    def create_update_match_btn(self, data):
+    def create_update_match_btn(self, data, local):
         '''Creates a button that calls the update_match method
-        :param data: The db call containing all web addons'''
-        self.update_match_btn = tk.Button(self.display_frame, text='Update Match', command=lambda: self.update_match(data))
+        :param data: The db call containing all web addons
+        :param local: The name of the local addon that did not match'''
+        self.update_match_btn = tk.Button(self.display_frame, text='Update Match', command=lambda: self.update_match(data, local))
         self.update_match_btn.place(x=250, y=520)
 
 
@@ -296,8 +299,11 @@ class RejuvGUI(tk.Tk):
         self.create_installed_addons_screen()
 
 
-    def update_match(self, data):
+    def update_match(self, data, local):
         '''Calls the update to fix the bad mathc
-        :param data: The db call containing all web addons'''
+        :param data: The db call containing all web addons
+        :param local: The name of the local addon that did not match'''
         curent_item = self.my_addons.focus()
-        print(data[int(curent_item)])
+        Controller.add_correction_to_db(local, data[int(curent_item)])
+        self.create_compare_msg_screen()
+  

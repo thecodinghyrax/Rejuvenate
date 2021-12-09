@@ -128,7 +128,9 @@ class Controller:
     def get_web_db_addons():
         return db.get_all_web_addons()
 
-
+    @staticmethod
+    def add_correction_to_db(local_name, web_name):
+        db.insert_correction(local_name, web_name)
     # @staticmethod
     # def get_matching_addons(local_addons_list):
     #     found_list = []
@@ -196,6 +198,7 @@ class Controller:
 
     @staticmethod
     def get_matching_list():
+        db.preform_correction()
         local_addons = db.get_all_local_addons()
         web_addons = db.get_all_web_addons()
         matched_list = []
