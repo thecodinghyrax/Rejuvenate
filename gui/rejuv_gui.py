@@ -318,7 +318,7 @@ class RejuvGUI(tk.Tk):
 
 
     def update_match(self, data, local):
-        '''Calls the update to fix the bad mathc
+        '''Calls the update to fix the bad match
         :param data: The db call containing all web addons
         :param local: The name of the local addon that did not match'''
         curent_item = self.my_addons.focus()
@@ -342,7 +342,13 @@ class RejuvGUI(tk.Tk):
         
     def update_all(self):
         '''Calls the update_all method, displays the results and adds an exit button'''
-        Controller.update_all()
+        local_addons = Controller.get_local_db_addons()
+        old_addons = []
+        for addon in local_addons:
+            if addon[3] != addon[4]:
+                old_addons.append(addon)
+        Controller.update_all(old_addons, self.scraper)
+        self.update_all_btn.destroy()
         self.create_installed_addons_screen()
         self.create_exit_btn()
             

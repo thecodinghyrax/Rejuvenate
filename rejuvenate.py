@@ -15,4 +15,6 @@ if Controller.is_initial():
 
 else:
     root.create_compare_msg_screen()
-root.mainloop()
+    
+if __name__ == '__main__':
+    root.mainloop()
