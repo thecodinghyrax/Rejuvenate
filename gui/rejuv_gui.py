@@ -31,17 +31,65 @@ class RejuvGUI(tk.Tk):
         self.style.configure("my_addon.Treeview.Heading", font=self.font10)
 
 
-
+    ############################## GENERIC (reusable) COMPONENTS ###########################
     def create_display_frame(self, x, y):
-        ''' Creates a frame to display messages and list boxes on 
+        ''' Creates a frame to display messages and list boxes on. This will be 
+            created and destroyed for every other screen (base)
         :param x: The x position to place the frame
         :param y: The y position to place the frame
         '''
         self.display_frame = tk.Frame(background="#333333", height=600, width=600)
         self.display_frame.place(x=x, y=y)
 
-  
 
+    def create_table_view(self, msg, column_list, data):
+        '''Creates a screen to show data in a table (treeview)
+        :param msg: A message to be displayed at the top of the screen
+        :param column_list: A list of column names to be used in the heading
+        :param data: A list of data from the db to be displayed in the table
+        '''
+        self.addon_frame = tk.Frame(background="#333333", height=600, width=600)
+        self.addon_frame.place(x=0, y=0)
+        self.setup_label = tk.Label(self.addon_frame, text=msg,
+                                width=38, pady=2, font=self.font20,
+                                fg='#FFFFFF', bg='#222222')
+        self.setup_label.place(x=0, y=2)
+        self.create_display_frame(0, 40)
+        self.bkg_label = tk.Label(self.display_frame, image=self.bkg_image)
+        self.bkg_label.place(x=-2, y=0)
+
+        self.my_addons = ttk.Treeview(self.display_frame, height=23, style="my_addon.Treeview", selectmode='browse')
+        self.my_addons.place(x=0, y=50)
+
+        self.style.configure(self.my_addons)
+
+        self.my_addons['columns'] = tuple(column_list)
+        self.my_addons.column("#0", width=0, stretch=tk.NO)
+        col_width = round(550 / len(column_list))
+        for column in column_list:
+            self.my_addons.column(column, anchor=tk.CENTER, width=col_width)
+        
+        self.my_addons.heading('#0', text="", anchor=tk.CENTER)
+        for column in column_list:
+            self.my_addons.heading(column, text=column, anchor=tk.CENTER)
+
+        self.my_addons.tag_configure('odd', background="#303030", foreground="#FFFFFF")
+        self.my_addons.tag_configure('even', foreground="#FFFFFF")
+                    
+        for position, addon in enumerate(data):
+            data_values = [] 
+            for index in range(len(column_list)):
+                data_values.append(addon[index])
+            if position % 2 == 0:
+                self.my_addons.insert(parent='', index='end', iid=position, text='',
+                        values=(tuple(data_values)), tags=('odd',))
+            else:
+                self.my_addons.insert(parent='', index='end', iid=position, text='',
+                        values=(tuple(data_values)), tags=('even',))
+            self.my_addons.place(x=25, y=25)
+
+  
+    ##############################  INITIAL SETUP SCREENS #################################
     def create_setup_screen(self):
         '''Creates a screen to tell the user the app is being setup, waits 3 seconds and then 
             destroyes it's self'''
@@ -54,7 +102,6 @@ class RejuvGUI(tk.Tk):
         time.sleep(3)
         self.display_frame.destroy()
     
-
             
     def create_not_found_screen(self):
         '''Creates a screen to locate the local addons folder if not found
@@ -77,7 +124,29 @@ class RejuvGUI(tk.Tk):
         self.find_folder_btn.place(x=190, y=150)
 
 
-            
+    def create_db_update_screen(self):
+        '''Creates a screen to tell the user that the DB is being created
+            Calls the "create_db" method to start the db creation process
+        '''
+        self.create_display_frame(0, 0)
+        self.setup_label = tk.Label(self.display_frame, text=Controller.get_constants().DB_UPDATE_MSG,
+                                height=10, width=26, pady=2, font=self.font20,
+                                fg='#FFFFFF', bg='#333333')
+        self.setup_label.place(x=80, y=100)
+        self.update()
+        self.create_db()
+
+
+    def create_error_screen(self):
+            '''Create a screen to show an error message if the database fails to be created'''
+            self.create_display_frame(0, 0)
+            self.setup_label = tk.Label(self.display_frame, text=Controller.get_constants().DB_ERROR_MSG,
+                                    height=10, width=22, pady=2, font=self.font20,
+                                    fg='#FFFFFF', bg='#333333')
+            self.setup_label.place(x=100, y=100)
+
+
+    ################################# SETUP GUI METHODS  ###############################
     def save_path(self):
         '''Called from the "create_not_found_screen"
             Updates the config.ini file with the selected path
@@ -104,19 +173,6 @@ class RejuvGUI(tk.Tk):
         self.find_folder_btn.place(x=250, y=140)
 
 
-    def create_db_update_screen(self):
-        '''Creates a screen to tell the user that the DB is being created
-            Calls the "create_db" method to start the db creation process
-        '''
-        self.create_display_frame(0, 0)
-        self.setup_label = tk.Label(self.display_frame, text=Controller.get_constants().DB_UPDATE_MSG,
-                                height=10, width=26, pady=2, font=self.font20,
-                                fg='#FFFFFF', bg='#333333')
-        self.setup_label.place(x=80, y=100)
-        self.update()
-        self.create_db()
-
-
     def create_db(self):
         '''Creates and populates the db. This step involves scraping the website and takes up to a minute to complete.
             If there was an exception thrown when loading the db, the error window will
@@ -126,7 +182,7 @@ class RejuvGUI(tk.Tk):
             Controller.update_config('initial_load', 'False')
             self.scraper.scrape_all_to_db()
             self.display_frame.destroy()
-            self.create_find_local_screen()
+            self.create_compare_msg_screen()
         else:
             self.display_frame.destroy()
             self.create_error_screen()
@@ -135,19 +191,99 @@ class RejuvGUI(tk.Tk):
             quit()
 
 
-    def create_find_local_screen(self):
-        '''Creates a screen to tell the user that the local addons are being found
-            Rebuilds the local addon table to start freash incase of new addon install
-            Calls the "create_db" method to start the db creation process
-        '''
-        Controller.rebuild_local_addons_table()
-        self.create_display_frame(0, 0)
-        self.setup_label = tk.Label(self.display_frame, text=Controller.get_constants().LOCAL_FIND_MSG,
-                                height=10, width=26, pady=2, font=self.font20,
-                                fg='#FFFFFF', bg='#333333')
-        self.setup_label.place(x=80, y=100)
-        self.update()
-        self.find_local_addons()
+    ###################################### MAIN UI SCREENS  ##################################
+    def create_compare_msg_screen(self):
+            '''Create a screen to tell the user to check the addons and update if needed'''
+            self.create_display_frame(0, 0)
+            self.setup_label = tk.Label(self.display_frame, text=Controller.get_constants().CHECK_ADDONS_MSG,
+                                    height=10, width=22, pady=2, font=self.font20,
+                                    fg='#FFFFFF', bg='#333333')
+            self.setup_label.place(x=120, y=100)
+            self.update()
+            time.sleep(5)
+            self.display_frame.destroy()
+            self.create_compare_addons_screen()
+
+
+    def create_compare_addons_screen(self):
+        '''Creates a screen that show the user all the installed addons and the addons that
+            were matched to them. There may be error and should be reviewed. The user can 
+            select the row that is incorrect and press the "Update Selected" btn to fix.'''
+        self.display_frame.destroy()
+        msg = "Please update any addon that does not match"
+        column_list = ['ESOUI ID', 'Web Version', 'Local Version']
+        data = Controller.get_matching_list()
+        self.create_table_view(msg, column_list, data)
+        self.create_selected_btn()
+
+
+    def create_select_correct_screen(self, local):
+        '''Creates a screen that shows all addons listed on the website so the user
+            can select the proper one that actually matches the local addon listed 
+            in the message box at the top of the screen
+            :param local: The name of the locally install addon that was not matched correctly'''
+        self.display_frame.destroy()
+        msg = f"Select the correct addon for {local}"
+        column_list = ['ESOUI ID', 'Web Version']
+        data = Controller.get_web_db_addons()
+        data.sort(key=lambda y: y[1])
+        self.create_table_view(msg, column_list, data)
+        self.create_update_match_btn(data) # passing data down to avoid another db call
+
+
+    # MAY NOT BE NEEDED
+    # def create_find_local_screen(self):
+    #     '''Creates a screen to tell the user that the local addons are being found
+    #         Rebuilds the local addon table to start freash incase of new addon install
+    #         Calls the "find_local_addons" method to start the main UI flow
+    #     '''
+    #     Controller.rebuild_local_addons_table()
+    #     self.create_display_frame(0, 0)
+    #     self.setup_label = tk.Label(self.display_frame, text=Controller.get_constants().LOCAL_FIND_MSG,
+    #                             height=10, width=26, pady=2, font=self.font20,
+    #                             fg='#FFFFFF', bg='#333333')
+    #     self.setup_label.place(x=80, y=100)
+    #     self.update()
+    #     self.find_local_addons()
+
+    
+    def create_installed_addons_screen(self):
+        '''Creates a screen that displays all the locally installed addons in a table'''
+        self.display_frame.destroy()
+        msg = 'Rejuvenate is ready!'
+        column_list = ['ESOUI ID', 'Local Addon', 'Local Version', 'Web Version']
+        data = Controller.get_local_db_addons()
+        self.create_table_view(msg, column_list, data)
+        self.create_compare_btn()
+
+
+
+    ################################# MAIN GUI BUTTONS  #################################
+    def create_selected_btn(self):
+        '''Creates a button that calls the update selected method'''
+        self.selected_btn = tk.Button(self.display_frame, text='Update Selected', command=self.update_selected)
+        self.selected_btn.place(x=250, y=520)
+
+
+    def create_compare_btn(self):
+        '''Creates a button that calls the create_compare_addons_screen'''
+        self.compare_btn = tk.Button(self.display_frame, text='Compare addons', command=self.create_compare_addons_screen)
+        self.compare_btn.place(x=250, y=520)
+
+
+    def create_update_match_btn(self, data):
+        '''Creates a button that calls the update_match method
+        :param data: The db call containing all web addons'''
+        self.update_match_btn = tk.Button(self.display_frame, text='Update Match', command=lambda: self.update_match(data))
+        self.update_match_btn.place(x=250, y=520)
+
+
+    ########################################## MAIN GUI METHODS  #########################
+    def update_selected(self):
+        '''Gets the currently selected row and passes the data to the create_select_correct_screen'''
+        curent_item = self.my_addons.focus()
+        matching_list = Controller.get_matching_list()
+        self.create_select_correct_screen(matching_list[int(curent_item)][2])
 
 
     def find_local_addons(self):
@@ -157,67 +293,11 @@ class RejuvGUI(tk.Tk):
         '''
         Controller.find_local_addons()
         self.setup_label.destroy()
-        self.create_welcome_screen('Rejuvenate is ready!')
-
-    def create_error_screen(self):
-        self.create_display_frame(0, 0)
-        self.setup_label = tk.Label(self.display_frame, text=Controller.get_constants().DB_ERROR_MSG,
-                                height=10, width=22, pady=2, font=self.font20,
-                                fg='#FFFFFF', bg='#333333')
-        self.setup_label.place(x=100, y=100)
+        self.create_installed_addons_screen()
 
 
-    def create_welcome_screen(self, msg):
-        self.addon_frame = tk.Frame(background="#333333", height=600, width=600)
-        self.addon_frame.place(x=0, y=0)
-        self.setup_label = tk.Label(self.addon_frame, text=msg,
-                                width=38, pady=2, font=self.font20,
-                                fg='#FFFFFF', bg='#222222')
-        self.setup_label.place(x=0, y=2)
-        self.create_display_frame(0, 40)
-        self.bkg_label = tk.Label(self.display_frame, image=self.bkg_image)
-        self.bkg_label.place(x=-2, y=0)
-
-        self.my_addons = ttk.Treeview(self.display_frame, height=23, style="my_addon.Treeview")
-        self.my_addons.place(x=0, y=50)
-
-        self.style.configure(self.my_addons)
-
-        self.my_addons['columns'] = ('esoui_id', 'folder_name', 'local_version', 'web_version')
-        self.my_addons.column("#0", width=0, stretch=tk.NO)
-        self.my_addons.column('esoui_id', anchor=tk.CENTER, width=80)
-        self.my_addons.column('folder_name', anchor=tk.W, width=240)
-        self.my_addons.column('local_version', anchor=tk.CENTER, width=110)
-        self.my_addons.column('web_version', anchor=tk.CENTER, width=110)
-
-        self.my_addons.heading('#0', text="", anchor=tk.CENTER)
-        self.my_addons.heading('esoui_id', text="ESOUI ID", anchor=tk.CENTER)
-        self.my_addons.heading('folder_name', text="Addon Name", anchor=tk.W)
-        self.my_addons.heading('local_version', text="Installed Version", anchor=tk.CENTER)
-        self.my_addons.heading('web_version', text="Current Version", anchor=tk.CENTER)
-
-        self.my_addons.tag_configure('odd', background="#303030", foreground="#FFFFFF")
-        self.my_addons.tag_configure('even', foreground="#FFFFFF")
-
-        for position, addon in enumerate(Controller.get_local_db_addons()):
-            if position % 2 == 0:
-                self.my_addons.insert(parent='', index='end', iid=position, text='',
-                        values=(addon[0], addon[1], addon[3], addon[4]), tags=('odd',))
-            else:
-                self.my_addons.insert(parent='', index='end', iid=position, text='',
-                        values=(addon[0], addon[1], addon[3], addon[4]), tags=('even',))
-        self.my_addons.place(x=25, y=25)
-
-        self.find_current_btn = tk.Button(self.display_frame, text="Find Versions", command=self.get_matching)
-        self.find_current_btn.place(x=80, y=525)
-
-        self.update_btn = tk.Button(self.display_frame, text="Update All")
-        self.update_btn.place(x=400, y=525)
-
-
-
-
-
-
-    def get_matching(self):
-        Controller.get_matching_list()
+    def update_match(self, data):
+        '''Calls the update to fix the bad mathc
+        :param data: The db call containing all web addons'''
+        curent_item = self.my_addons.focus()
+        print(data[int(curent_item)])
