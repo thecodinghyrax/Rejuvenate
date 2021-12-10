@@ -13,7 +13,7 @@ def create_connection():
         return conn
     except Error as err:
         print(err)
-    return None
+    return True
 
 
 def create_table(sql_create_table):

@@ -1,38 +1,46 @@
 import os
 from zipfile import ZipFile
 import os.path
-'''
-Th3 unzip_to_addons_dir works however, it does not update the date the folder
-was modified due to the name being the same. The contents do get updated though.
-Next need to delete the zip folders in the downloads and call it good (I think) :D
-'''
+import shutil
+
 
 class FileOps:
-    def __init__(self, old_addons, addons_path, downloads_path):
-        self.old_addons = old_addons
-        self.addons_path = addons_path
+    def __init__(self, addons_path, downloads_path):
+        self.addons_path = addons_path.replace("/", "\\")
         self.downloads_path = downloads_path
         
-        
-
+    
 
     def unzip_to_addons_dir(self, addon):
+        '''Unzips the new addon from the downloads folder into the addon folder
+        :param addon: A addon tuple like (id, local_name, web_name, local_vesion, web_version)
+                    that was downloaded from ESOUI.com
+        :retrun: True if successful, else False'''
         addon_zip = os.path.join(self.downloads_path, (addon + ".zip"))
-        with ZipFile(addon_zip, 'r') as zipObj:
-            zipObj.extractall(path=self.addons_path)
-            
-            
-            
-    def check_config(self):
-        print(f"old_addons = {self.old_addons}")
-        print(f"addons_path = {self.addons_path}")
-        print(os.path.join(self.downloads_path, 'LibPhinixFunctions.zip'))
-        print(f"downloads_path = {self.downloads_path}")
+        # addons_path = os.path(self.addons_path)
+        local_addon_folder = os.path.join(self.addons_path, addon)
+        self._delete_old_files(local_addon_folder)
+        if os.path.isfile(addon_zip):
+            with ZipFile(addon_zip, 'r') as zipObj:
+                zipObj.extractall(path=self.addons_path)
+            self._delete_old_files(addon_zip)
+            return True
+        return False
+        
+
+    def _delete_old_files(self, path):
+        '''Deletes the unneeded files or folers
+        :param path: The path to the file or folder'''
+        try:
+            if os.path.isfile(path):
+                os.remove(path)
+            elif os.path.isdir(path):
+                shutil.rmtree(path)
+            else:
+                raise Exception(IOError)
+        except Exception as e:
+            print(f"Addon was not deleted: {e}")
+
             
 if __name__ == '__main__':
-    old_addons = [('2298', 'LibPhinixFunctions', '', '1.0.16', '1.0.16')]
-    addons_path = r'C:\Users\drewc\OneDrive\Documents\Elder Scrolls Online\live\AddOns1'
-    downloads_path = r'C:\Users\drewc\Downloads'
-    f = FileOps(old_addons, addons_path, downloads_path)
-    f.check_config()
-    f.unzip_to_addons_dir('LibPhinixFunctions')
+    pass

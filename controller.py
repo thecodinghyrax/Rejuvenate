@@ -3,6 +3,7 @@ import os
 import configparser
 from database import db
 from web_modules.scraper import Scraper
+from local_modules import file_operations
 
 class Controller:
 
@@ -167,11 +168,15 @@ class Controller:
 
 
     @staticmethod
-    def update_all(needing_updates, scraper):
+    def update_all(addons_needing_updates, scraper):
+        addon_path = Controller.get_local_addon_path_config()
+        downloads_dir = Controller.get_downloads_dir()
+        file_ops = file_operations.FileOps(addon_path, downloads_dir)
         download_dir = str(Controller.get_downloads_dir())
-        for old_addon in needing_updates:
+        for old_addon in addons_needing_updates:
             scraper.download_addon(old_addon[0], old_addon[1], download_dir)
             db.update_addon_by_id('local_addon', old_addon[0], 'local_version', old_addon[4])
+            file_ops.unzip_to_addons_dir(old_addon[1])
         
         
     ##########################   NAME MATCHING METHODS   ############################
