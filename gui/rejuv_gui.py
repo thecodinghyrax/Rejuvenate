@@ -21,8 +21,8 @@ class RejuvGUI(tk.Tk):
         self.bkg_image = tk.PhotoImage(file='assets/bkg.gif')
         self.font20 = Font(family='Segoe', size=20)
         self.font10 = Font(family='Segoe', size=10)
-        self.animation_count = 0
-        self.animation_cmd = None
+        # self.animation_count = 0
+        # self.animation_cmd = None
         self.returned_path = ""
         self.scraper = Controller.get_scraper()
         self.style = ttk.Style()
@@ -297,8 +297,8 @@ class RejuvGUI(tk.Tk):
 
     def create_exit_btn(self):
         '''Creates a button that calls the create_installed_addon_screen method'''
-        self.update_all_btn = tk.Button(self.display_frame, text='Exit', command=quit)
-        self.update_all_btn.place(x=350, y=520)
+        self.exit_btn = tk.Button(self.display_frame, text='Exit', command=quit)
+        self.exit_btn.place(x=250, y=520)
 
 
     ########################################## MAIN GUI METHODS  #########################
@@ -318,7 +318,7 @@ class RejuvGUI(tk.Tk):
 
 
     def update_match(self, data, local):
-        '''Calls the update to fix the bad mathc
+        '''Calls the update to fix the bad match
         :param data: The db call containing all web addons
         :param local: The name of the local addon that did not match'''
         curent_item = self.my_addons.focus()
@@ -342,7 +342,14 @@ class RejuvGUI(tk.Tk):
         
     def update_all(self):
         '''Calls the update_all method, displays the results and adds an exit button'''
-        Controller.update_all()
+        local_addons = Controller.get_local_db_addons()
+        old_addons = []
+        for addon in local_addons:
+            if addon[3] != addon[4]:
+                old_addons.append(addon)
+        Controller.update_all(old_addons, self.scraper)
         self.create_installed_addons_screen()
+        self.update_all_btn.destroy()
+        self.check_for_updates_btn.destroy()
         self.create_exit_btn()
             

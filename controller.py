@@ -3,6 +3,7 @@ import os
 import configparser
 from database import db
 from web_modules.scraper import Scraper
+from local_modules import file_operations
 
 class Controller:
 
@@ -48,8 +49,9 @@ class Controller:
 
     @staticmethod
     def get_constants():
-        '''Used to send the contants data to the GUI
-        :returns: the constants data'''
+        '''Used to send the constants data to the GUI
+        :returns: the constants data
+        '''
         return constants
 
     ####################   LOCAL ADDON METHODS    ##############################
@@ -97,6 +99,7 @@ class Controller:
 
     @staticmethod
     def find_local_addons():
+        '''Finds all locally installed addons and adds them to the db'''
         for name in Controller.get_local_addon_dirs():
             try:
                 version = Controller.get_addon_version(name)
@@ -118,106 +121,89 @@ class Controller:
 
     @staticmethod
     def rebuild_local_addons_table():
+        '''Drops and rebuilds the local_addons table to start fresh'''
         db.rebuild_local_table()
     
     @staticmethod
     def get_local_db_addons():
+        '''Gets all local addons from the db
+        :return: All addons from the db as (esoui_id,folder_name,web_name,local_version,web_version)'''
         return db.get_all_local_addons()
     
     @staticmethod
     def get_addons_to_check():
+        '''Gets all locally install addons. Used for checking the curent versions
+        :return: All locally installed addons as (folder_name,local_version,web_version,esoui_id)'''
         return db.get_addons_to_check()
 
     @staticmethod
     def get_web_db_addons():
+        '''Gets all addons listed on the website from the db
+        :retruns: Add web addons as (esoui_id,name)'''
         return db.get_all_web_addons()
 
     @staticmethod
     def add_correction_to_db(local_name, web_name):
+        '''Add the user defined matching local and web addon names to the db'''
         db.insert_correction(local_name, web_name)
-    # @staticmethod
-    # def get_matching_addons(local_addons_list):
-    #     found_list = []
-    #     all_db_addons = Controller.get_all_addons()
-    #     for local_addon in local_addons_list:
-    #         search_name = Controller.create_search_name(local_addon)
-    #         try:
-    #             result = db.get_one_addon('search_name', search_name)
-    #             if len(result) == 1:
-    #                 found_list.append(result[0])
-    #             else:
-    #                 found_list.append(Controller.try_match(search_name, all_db_addons))
-    #         except Exception as e:
-    #             print(f"There was an exception: {e} on {search_name}")
-    #     return found_list
 
-
-    # @staticmethod
-    # def get_unmatched_addons(local_addons_list):
-    #     not_found = []
-    #     for local_addon in local_addons_list:
-    #         search_name = Controller.create_search_name(local_addon)
-    #         try:
-    #             result = db.get_one_addon('search_name', search_name)
-    #             if result == None:
-    #                 not_found.append(search_name)
-    #         except Exception as e:
-    #             print(f"There was an exception: {e} on {search_name}")
-    #     return not_found
-
-
-    # @staticmethod
-    # def update_addon_info(search_field, search_name, update_field, new_data):
-    #     if db.update_one_addon(search_field, search_name, update_field, new_data):
-    #         return "Record was updated"
-    #     return "There was a problem updating the search_name"
-
-    # @staticmethod
-    # def get_all_addons():
-    #     return db.get_all_addons()
-
-    # @staticmethod
-    # def set_all_to_uninstalled():
-    #     db.set_all_to_uninstalled()
 
    ########################  SCRAPER METHODS   ##########################
 
     @staticmethod
     def get_scraper():
+        '''Returns an instance of the Scraper class for the GUI'''
         return Scraper()
 
-
-    # @staticmethod
-    # def get_current_addon_version(name, scraper):
-    #     addon_info = db.get_one_addon('search_name', name)
-    #     print(addon_info[0])
-    #     return scraper.scrape_single_addon_version(addon_info[0])
     
     @staticmethod
     def check_for_updates(local_addons, scraper):
-        current_addons = []
+        '''Grabs the current version of each installed addon and updates the db
+        :param local_addons: A list of tuples like (local_addon_name, esoui_id)
+        :param scraper: An instance of the scraper object from the GUI
+        '''
         for addon in local_addons:
-            # current_addons.append(scraper.scrape_single_addon_version(addon[1]))
             current_version = scraper.scrape_single_addon_version(addon[1])
-            current_addons.append(current_version)
             db.update_addon_by_id('local_addon', addon[1], 'web_version', current_version)
-        return current_addons
 
 
+    @staticmethod
+    def update_all(addons_needing_updates, scraper):
+        addon_path = Controller.get_local_addon_path_config()
+        downloads_dir = Controller.get_downloads_dir()
+        file_ops = file_operations.FileOps(addon_path, downloads_dir)
+        download_dir = str(Controller.get_downloads_dir())
+        for old_addon in addons_needing_updates:
+            scraper.download_addon(old_addon[0], old_addon[1], download_dir)
+            db.update_addon_by_id('local_addon', old_addon[0], 'local_version', old_addon[4])
+            file_ops.unzip_to_addons_dir(old_addon[1])
+        
+        
     ##########################   NAME MATCHING METHODS   ############################
     @staticmethod
     def list_lower(list_to_lower):
+        '''Takes a list of strings and make all elements lowercase
+        :param list_to_lower: A list of strings that needs to be converted to lowercase
+        :return: The supplied list coverted to lowercase
+        '''
         return [x.lower() for x in list_to_lower]
     
 
     @staticmethod
     def get_matching_list():
+        '''Matches a list of local addons to the addons found on the website.
+            Runs the preform_correction method to utilize any user defined changes.
+            Adds the esoui_id to the local_addons table'''
         db.preform_correction()
         local_addons = db.get_all_local_addons()
         web_addons = db.get_all_web_addons()
         matched_list = []
         for addon in local_addons:
-            esoui_id, web_name = Controller.try_match(addon[1], web_addons)
+            if addon[2] == "":
+                esoui_id, web_name = Controller.try_match(addon[1], web_addons)
+            else:
+                esoui_id, web_name = Controller.try_match(addon[2], web_addons)
+            
             matched_list.append((esoui_id, web_name, addon[1]))
             db.update_one_addon('local_addon','folder_name', addon[1], 'esoui_id', esoui_id)
         return matched_list

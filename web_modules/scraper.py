@@ -97,8 +97,24 @@ class Scraper:
         version = addon_page.find(id='version').text
         return version.split(': ')[1]
 
-    def check_for_updates(self, addons):
-        print(addons)    
+
+    def download_addon(self, esoui_id, local_addon_name, downloads_dir):
+        '''Downloads the current addon folder from ESOUI.com as a zip file
+        :param esoui_id: The id for the addon to download
+        :param local_addon_name: The local name of the addon
+        :param downloads_dir: The user Downloads directory path
+        :retrun: "ok" if it doesn't blow up'''
+        out_file_name = f"{downloads_dir}\\{local_addon_name}.zip"
+        url = constants.DOWNLOADS_TEMPLATE.replace('<id>', esoui_id)
+        with requests.get(url, stream=True) as r:
+            with open(out_file_name, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192): 
+                    f.write(chunk)
+        return "ok"
+
+
+# local_filename = 'c:\\Users\\drewc\\downloads\\' + file_name + '.zip'
+# download_addon(url, local_filename)    
 
     def __repr__(self):
         return "Scraper"

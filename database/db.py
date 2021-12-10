@@ -13,7 +13,7 @@ def create_connection():
         return conn
     except Error as err:
         print(err)
-    return None
+    return True
 
 
 def create_table(sql_create_table):
@@ -88,7 +88,6 @@ def rebuild_local_table():
 
 def insert_web_addon(addon):
     """Create a new web addon for table
-    :param conn: The SQLite connection object
     :param addon: A tuple of a addon (esoui_id, name)
     :return: returns the row id of the cursor object, the addon id
     """
@@ -168,7 +167,7 @@ def get_addons_to_check():
 
 def get_all_corrections():
     """Query all rows of correction table
-    :return: All rows containing data from the correction table
+    :return: All correction table data as (folder_name,web_name)
     """
     conn = create_connection()
     cur = conn.cursor()
@@ -178,12 +177,12 @@ def get_all_corrections():
 
 
 def preform_correction():
+    '''Checks for an correction entries and updates the local_addon table if necessary'''
     corrections = get_all_corrections()
     if corrections:
-        local = get_all_local_addons()
+        # local = get_all_local_addons()
         for correct in corrections:
-            test = f"'local_addon','folder_name', {correct[0]}, 'folder_name', {correct[1]}"
-            update_one_addon('local_addon','folder_name', correct[0], 'folder_name', correct[1] )
+            update_one_addon('local_addon','folder_name', correct[0], 'web_name', correct[1] )
 
 
 def get_one_addon(table, field, value):
@@ -253,7 +252,3 @@ def update_addon_by_id(table, esoui_id, field, new_value):
     except Exception as e:
         return False
 
-
-
-if __name__ == "__main__":
-    pass
