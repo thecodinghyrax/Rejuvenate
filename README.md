@@ -1,2 +1,18 @@
-# Rejuvenate
-CIS-189 Final Project
+# 2021 CIS-189 Final Project
+## Project requirements
+For our final project we were asked to create an application that utilizes much of what we learned this semester in our CIS-189 Python course. I decided to write an application that would help a player of the game The Elder Scrolls Online to update their locally installed addons. Some of the project requirements were to create a GUI component, have exception handling, user input, classes, unit tests and much more. 
+## My Final Project:
+Rejuvenate – An addon updater for the Elder Scrolls Online game
+## How it works
+This project required quite a bit of web scraping from the ESOUI.com website as there was no API to access. I decided to create a local database using sqlite3 and store basic information from all available addons listed on the website, information on locally installed addons and some data corrected by the users. In the initial setup process, the application attempts to locate the local addons folder but will prompt the user to select it using a file picker if not found. 
+The database is then created, and the website is scraped for addon information. Once done, the text files of the local addons are read and that information is added to the database. Next the application attempts to match the local addon names with the names scraped from the website (they are not listed the same way in both places). The user is then displayed the names side by side and is allowed to correct any discrepancies. Once the names have been properly matched, the website is scraped for more detailed information, but only for the installed addons. 
+The information is again displayed to the user with local and current addon version information shown. Finally, the application downloads any addon with an outdated version, unzips the addon and places it in the proper folder, deletes the downloaded zip file and displays the updated versions to the user. 
+## Short comings of the application / struggles
+I only had a couple of weeks to complete this application and was further limited by my other class finals, work and family responsibilities so there are some things that didn’t get completed to my satisfaction. 
+I attempted to structure the application using a controller that sat in between my GUI and the other functions. This worked pretty well to keep the code organized but I am looking forward to studying more on good design patterns to better clean up my code structure. 
+The application could use some additional features to make it more usable. A search feature when correcting the addon name matching would be very helpful. 
+It might have been possible to utilize the search feature of the website to find information only for addons locally installed. This would have negated the need to scrape all addons and match them after the fact. This would likely also speed up the setup process. 
+Finally, I would have liked to provide better test coverage. My experience with unit testing is very limited and I struggled with how Python imports work. I look forward to learning more about mocking, integration test and ways to structure my code better to make it more testable. 
+## Final thoughts
+For the most part I am pretty pleased with how this turned out. I was able to make a working application that solves a problem that I had, and I really pushed myself to utilize more of the OOP principles than I have in past projects. I knew I was creating much more than was asked of the project specifications, but I am mostly happy with how everything turned out. This has been a fun project to work on. 
+You can check out the project demonstration [here]( https://www.youtube.com/watch?v=rO9EP57hEA8)
