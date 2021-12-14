@@ -9,7 +9,6 @@ class FileOps:
         self.addons_path = addons_path.replace("/", "\\")
         self.downloads_path = downloads_path
         
-    
 
     def unzip_to_addons_dir(self, addon):
         '''Unzips the new addon from the downloads folder into the addon folder
