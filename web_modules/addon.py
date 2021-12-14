@@ -16,6 +16,7 @@ class Addon:
         '''
         return self._esoui_id
 
+
     def get_name(self):
         ''' Gets the displayed name of this addon from esoui.com
         :return: The addon name
@@ -41,7 +42,8 @@ class Addon:
         ''' Displays all catagory information
         :returns: All variables used in this Addon instance
         '''
-        return f"{self._esoui_id}, {self._name}, "
+        return f"{self._esoui_id}, {self._name}"
+        
         
     def __repr__(self):
         ''' Displays the call to create this Addon instance

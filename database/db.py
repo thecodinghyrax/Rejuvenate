@@ -3,7 +3,6 @@ from sqlite3 import Error
 import constants
 
 
-
 def create_connection():
     """Connect to a SQLite database
     :db: filename of database

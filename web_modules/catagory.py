@@ -85,6 +85,7 @@ class Catagory:
         '''
         return self.addon_list
 
+
     def __display__(self):
         ''' Displays the catagory information
         :returns: Human readable information about this catagory

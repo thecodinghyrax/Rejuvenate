@@ -54,12 +54,14 @@ class Controller:
         '''
         return constants
 
+
     ####################   LOCAL ADDON METHODS    ##############################
     @staticmethod
     def get_downloads_dir():
         '''Creates a path object from the local user profile path plus their downloads folder
         :return: the path to the local users downloads folder'''
         return os.path.join(os.getenv('USERPROFILE'), 'Downloads')
+    
     
     @staticmethod
     def find_local_addon_folder():
@@ -74,7 +76,6 @@ class Controller:
         elif os.path.isdir(os.path.join(user_base_path, 'OneDrive', doc_addons_path)):
             full_local_addons_path = os.path.join(user_base_path, 'OneDrive', doc_addons_path)
             Controller.update_config('local_addon_path', full_local_addons_path)
-
         return full_local_addons_path
 
 
@@ -83,6 +84,7 @@ class Controller:
         '''Used to get all local addon folder names
         :returns: A list of all locally installed addon folder names '''
         return os.listdir(Controller.get_local_addon_path_config())
+
 
     @staticmethod
     def get_addon_version(addon_name):
@@ -97,6 +99,7 @@ class Controller:
                     line = line.split(":")
                     return line[1].strip()
 
+
     @staticmethod
     def find_local_addons():
         '''Finds all locally installed addons and adds them to the db'''
@@ -106,6 +109,7 @@ class Controller:
             except Exception as e:
                 version = f"{name} threw Exception: {e}"
             db.insert_local_addon((name, version))
+
 
     ##############################   DB METHODS   ######################################
     @staticmethod
@@ -119,10 +123,12 @@ class Controller:
         except Exception as e:
             return False 
 
+
     @staticmethod
     def rebuild_local_addons_table():
         '''Drops and rebuilds the local_addons table to start fresh'''
         db.rebuild_local_table()
+    
     
     @staticmethod
     def get_local_db_addons():
@@ -130,17 +136,20 @@ class Controller:
         :return: All addons from the db as (esoui_id,folder_name,web_name,local_version,web_version)'''
         return db.get_all_local_addons()
     
+    
     @staticmethod
     def get_addons_to_check():
         '''Gets all locally install addons. Used for checking the curent versions
         :return: All locally installed addons as (folder_name,local_version,web_version,esoui_id)'''
         return db.get_addons_to_check()
 
+
     @staticmethod
     def get_web_db_addons():
         '''Gets all addons listed on the website from the db
         :retruns: Add web addons as (esoui_id,name)'''
         return db.get_all_web_addons()
+
 
     @staticmethod
     def add_correction_to_db(local_name, web_name):
@@ -149,7 +158,6 @@ class Controller:
 
 
    ########################  SCRAPER METHODS   ##########################
-
     @staticmethod
     def get_scraper():
         '''Returns an instance of the Scraper class for the GUI'''

@@ -1,16 +1,8 @@
 import unittest
-import configparser
 from controller import Controller
 
 
 class TestControllerInitial(unittest.TestCase):
-    # def setUp(self):
-    #     config = configparser.ConfigParser()
-
-    #     return self.something
-
-    # def tearDown(self):
-    #     del self.something
 
     def test_is_initial(self):
         '''This test will only pass if the app has not been ran'''
@@ -21,10 +13,11 @@ class TestControllerInitial(unittest.TestCase):
         # Assert
         self.assertEqual(expected, actual)
 
+
     def test_get_local_addon_path_config(self):
         '''This test will only pass after I've ran this app once'''
         # Arrange
-        expected = ''
+        expected = '""'
         # Act
         actual = Controller.get_local_addon_path_config()
         # Assert

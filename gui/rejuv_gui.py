@@ -1,17 +1,13 @@
 import tkinter as tk
 from tkinter import ttk
-from tkinter import font
 from tkinter.font import Font
-from tkinter.filedialog import askdirectory, test
+from tkinter.filedialog import askdirectory
 from types import NoneType
-from PIL import Image, ImageTk
 from controller import Controller
 import time
 
 class RejuvGUI(tk.Tk):
-    # def __init__(self, conn, scraper):
     def __init__(self):
-
         super().__init__()
         self.geometry("600x600")
         self.resizable(False, False)
@@ -21,8 +17,6 @@ class RejuvGUI(tk.Tk):
         self.bkg_image = tk.PhotoImage(file='assets/bkg.gif')
         self.font20 = Font(family='Segoe', size=20)
         self.font10 = Font(family='Segoe', size=10)
-        # self.animation_count = 0
-        # self.animation_cmd = None
         self.returned_path = ""
         self.scraper = Controller.get_scraper()
         self.style = ttk.Style()
@@ -297,8 +291,8 @@ class RejuvGUI(tk.Tk):
 
     def create_exit_btn(self):
         '''Creates a button that calls the create_installed_addon_screen method'''
-        self.exit_btn = tk.Button(self.display_frame, text='Exit', command=quit)
-        self.exit_btn.place(x=250, y=520)
+        self.exit_btn = tk.Button(self.display_frame, text='Exit', command=quit, padx=10)
+        self.exit_btn.place(x=280, y=520)
 
 
     ########################################## MAIN GUI METHODS  #########################
@@ -335,7 +329,6 @@ class RejuvGUI(tk.Tk):
         updates = Controller.check_for_updates(addons, self.scraper)
         self.setup_label.destroy()
         self.create_installed_addons_screen()
-        print(updates)
         self.check_for_updates_btn.destroy()
         self.create_update_all_btn()
         

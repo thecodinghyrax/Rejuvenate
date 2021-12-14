@@ -5,11 +5,11 @@ from web_modules.catagory import Catagory
 from database import db
 
 
-
 class Scraper:
     def __init__(self):
         self._catatories_list = []
         self._addons = []
+ 
  
     def parse_page(self, link):
         '''Creates a BS4 object from the supplied link
@@ -63,6 +63,7 @@ class Scraper:
         self._addons = addons
         return True
 
+
     def scrape_all_to_db(self):
         '''This is the method used to create the catagory and addon lists and then
             write them to the database. This will take a while to run
@@ -111,10 +112,7 @@ class Scraper:
                 for chunk in r.iter_content(chunk_size=8192): 
                     f.write(chunk)
         return "ok"
-
-
-# local_filename = 'c:\\Users\\drewc\\downloads\\' + file_name + '.zip'
-# download_addon(url, local_filename)    
+  
 
     def __repr__(self):
         return "Scraper"
