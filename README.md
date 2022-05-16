@@ -15,4 +15,4 @@ It might have been possible to utilize the search feature of the website to find
 Finally, I would have liked to provide better test coverage. My experience with unit testing is very limited and I struggled with how Python imports work. I look forward to learning more about mocking, integration test and ways to structure my code better to make it more testable. 
 ## Final thoughts
 For the most part I am pretty pleased with how this turned out. I was able to make a working application that solves a problem that I had, and I really pushed myself to utilize more of the OOP principles than I have in past projects. I knew I was creating much more than was asked of the project specifications, but I am mostly happy with how everything turned out. This has been a fun project to work on. 
-You can check out the project demonstration [here]( https://www.youtube.com/watch?v=rO9EP57hEA8)
+You can check out the project demonstration [here](https://youtu.be/hM2tKqrBG3o)
